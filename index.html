@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Picat公式サイト</title>
+    <style>
+        /* ローディング画面 */
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+        }
+        
+        .loading-text {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* メインコンテンツ */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 800px;
+            width: 90%;
+            margin: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 2.2em;
+        }
+        
+        /* 訪問者カウンター */
+        .visitor-counter {
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+        
+        .datetime {
+            font-size: 1.4em;
+            margin: 30px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        /* タイマースタイル */
+        .timer-section {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+        }
+        .timer-display {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #2c3e50;
+        }
+        .timer-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .timer-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .timer-btn:hover {
+            background-color: #2980b9;
+        }
+        .timer-btn.reset {
+            background-color: #e74c3c;
+        }
+        .timer-btn.reset:hover {
+            background-color: #c0392b;
+        }
+        
+        /* 音楽プレイヤースタイル */
+        .music-player {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            text-align: left;
+        }
+        .upload-section {
+            margin-bottom: 20px;
+        }
+        .file-input {
+            margin: 10px 0;
+        }
+        .playlist {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 15px 0;
+            background-color: white;
+        }
+        .playlist-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .playlist-item:hover {
+            background-color: #f0f0f0;
+        }
+        .playlist-item.active {
+            background-color: #e1f5fe;
+            font-weight: bold;
+        }
+        .playlist-controls {
+            display: flex;
+            gap: 5px;
+        }
+        .move-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            padding: 2px 5px;
+        }
+        .move-btn:hover {
+            background-color: #ddd;
+            border-radius: 3px;
+        }
+        .player-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .player-btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #9b59b6;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .player-btn:hover {
+            background-color: #8e44ad;
+        }
+        .player-btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .player-btn.repeat {
+            background-color: #27ae60;
+        }
+        .player-btn.repeat.active {
+            background-color: #2ecc71;
+            box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+        }
+        .player-btn.repeat:hover {
+            background-color: #219653;
+        }
+        .progress-container {
+            margin: 15px 0;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #ddd;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .progress {
+            height: 100%;
+            background-color: #9b59b6;
+            width: 0%;
+            transition: width 0.1s;
+        }
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+        .repeat-info {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+        
+        /* メモ帳スタイル */
+        .memo-section {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            text-align: left;
+        }
+        .memo-textarea {
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Arial', sans-serif;
+            font-size: 1em;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        .memo-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .memo-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #f39c12;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .memo-btn:hover {
+            background-color: #e67e22;
+        }
+        .memo-btn.download {
+            background-color: #3498db;
+        }
+        .memo-btn.download:hover {
+            background-color: #2980b9;
+        }
+        .memo-btn.clear {
+            background-color: #e74c3c;
+        }
+        .memo-btn.clear:hover {
+            background-color: #c0392b;
+        }
+        
+        /* 電卓スタイル */
+        .calculator-section {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+        }
+        .calculator-display {
+            width: 100%;
+            height: 60px;
+            font-size: 2em;
+            text-align: right;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: white;
+            box-sizing: border-box;
+        }
+        .calculator-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        .calc-btn {
+            padding: 15px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 5px;
+            background-color: #34495e;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .calc-btn:hover {
+            background-color: #2c3e50;
+        }
+        .calc-btn.operator {
+            background-color: #e67e22;
+        }
+        .calc-btn.operator:hover {
+            background-color: #d35400;
+        }
+        .calc-btn.equals {
+            background-color: #27ae60;
+        }
+        .calc-btn.equals:hover {
+            background-color: #219653;
+        }
+        .calc-btn.clear {
+            background-color: #e74c3c;
+        }
+        .calc-btn.clear:hover {
+            background-color: #c0392b;
+        }
+        
+        /* パスワード生成スタイル */
+        .password-section {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+        }
+        .password-display {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: white;
+            box-sizing: border-box;
+            text-align: center;
+            font-family: monospace;
+            letter-spacing: 2px;
+        }
+        .password-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .password-options {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .password-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .password-length {
+            width: 60px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .generate-btn {
+            padding: 12px 25px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        .generate-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        /* 動画プレイヤースタイル */
+        .video-section {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            text-align: left;
+        }
+        .video-upload {
+            margin-bottom: 15px;
+        }
+        .video-player {
+            width: 100%;
+            max-width: 100%;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        .video-playlist {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 15px 0;
+            background-color: white;
+        }
+        .video-playlist-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .video-playlist-item:hover {
+            background-color: #f0f0f0;
+        }
+        .video-playlist-item.active {
+            background-color: #e1f5fe;
+            font-weight: bold;
+        }
+        
+        /* 動画サイトリンクスタイル */
+        .video-links-section {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+        }
+        .video-links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .video-link-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+        .video-link-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .video-link-icon {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            margin: 0 auto 15px;
+            border-radius: 10px;
+        }
+        .video-link-input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9em;
+            box-sizing: border-box;
+        }
+        .video-link-btn {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .video-link-btn:hover {
+            background-color: #2980b9;
+        }
+        .video-embed {
+            width: 100%;
+            height: 300px;
+            border: none;
+            border-radius: 5px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        /* 寄付とお問い合わせスタイル */
+        .donate-section {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+        }
+        .contact-section {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .donate-btn {
+            background-color: #27ae60;
+        }
+        .donate-btn:hover {
+            background-color: #219653;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        .contact-btn {
+            background-color: #3498db;
+        }
+        .contact-btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        .donate-text {
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            color: #2c3e50;
+        }
+        
+        /* フッター */
+        .footer {
+            margin-top: 40px;
+            padding: 20px;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 0.9em;
+            border-top: 1px solid #ecf0f1;
+        }
+    </style>
+</head>
+<body>
+    <!-- ローディング画面 -->
+    <div id="loadingScreen">
+        <div class="loading-text">Picat公式サイト</div>
+        <div class="spinner"></div>
+    </div>
+
+    <!-- メインコンテンツ -->
+    <div class="container" id="mainContent" style="display: none;">
+        <!-- ① Picat公式サイト -->
+        <h1>Picat公式サイト</h1>
+        
+        <!-- 訪問者カウンター -->
+        <div class="visitor-counter" id="visitorCounter">
+            訪問者数: 読み込み中...
+        </div>
+        
+        <!-- ② 日付と時計（曜日追加） -->
+        <div class="datetime" id="currentDateTime">
+            <!-- 日時はJavaScriptで動的に表示 -->
+        </div>
+        
+        <!-- ③ タイマー -->
+        <div class="timer-section">
+            <h2>タイマー</h2>
+            <div class="timer-display" id="timerDisplay">00:00:00</div>
+            <div class="timer-controls">
+                <button class="timer-btn" id="startTimer">開始</button>
+                <button class="timer-btn" id="pauseTimer">一時停止</button>
+                <button class="timer-btn reset" id="resetTimer">リセット</button>
+            </div>
+        </div>
+        
+        <!-- ④ 音楽プレイヤー（再生位置追加） -->
+        <div class="music-player">
+            <h2>音楽プレイヤー</h2>
+            <div class="upload-section">
+                <input type="file" id="musicUpload" class="file-input" accept="audio/*,audio/midi,audio/mid,.mid,.midi" multiple>
+                <p>音楽ファイルを選択（MP3, WAV, MIDIなど対応）</p>
+            </div>
+            
+            <div class="playlist" id="playlist">
+                <!-- プレイリストアイテムがここに追加されます -->
+            </div>
+            
+            <div class="player-controls">
+                <button class="player-btn" id="prevBtn">前へ</button>
+                <button class="player-btn" id="playBtn">再生</button>
+                <button class="player-btn" id="pauseBtn">一時停止</button>
+                <button class="player-btn" id="nextBtn">次へ</button>
+                <button class="player-btn repeat" id="repeatBtn">リピート</button>
+                <button class="player-btn" id="clearMusicBtn">クリア</button>
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress" id="progress"></div>
+                </div>
+                <div class="time-display">
+                    <span id="currentTime">0:00</span>
+                    <span id="duration">0:00</span>
+                </div>
+            </div>
+            <div class="repeat-info" id="repeatInfo">
+                リピート: オフ
+            </div>
+        </div>
+        
+        <!-- ⑤ 電卓 -->
+        <div class="calculator-section">
+            <h2>電卓</h2>
+            <input type="text" class="calculator-display" id="calcDisplay" readonly>
+            <div class="calculator-buttons">
+                <button class="calc-btn clear" onclick="clearCalculator()">C</button>
+                <button class="calc-btn clear" onclick="deleteLast()">⌫</button>
+                <button class="calc-btn operator" onclick="appendToDisplay('/')">/</button>
+                <button class="calc-btn operator" onclick="appendToDisplay('*')">×</button>
+                
+                <button class="calc-btn" onclick="appendToDisplay('7')">7</button>
+                <button class="calc-btn" onclick="appendToDisplay('8')">8</button>
+                <button class="calc-btn" onclick="appendToDisplay('9')">9</button>
+                <button class="calc-btn operator" onclick="appendToDisplay('-')">-</button>
+                
+                <button class="calc-btn" onclick="appendToDisplay('4')">4</button>
+                <button class="calc-btn" onclick="appendToDisplay('5')">5</button>
+                <button class="calc-btn" onclick="appendToDisplay('6')">6</button>
+                <button class="calc-btn operator" onclick="appendToDisplay('+')">+</button>
+                
+                <button class="calc-btn" onclick="appendToDisplay('1')">1</button>
+                <button class="calc-btn" onclick="appendToDisplay('2')">2</button>
+                <button class="calc-btn" onclick="appendToDisplay('3')">3</button>
+                <button class="calc-btn equals" onclick="calculate()" rowspan="2">=</button>
+                
+                <button class="calc-btn" onclick="appendToDisplay('0')" colspan="2">0</button>
+                <button class="calc-btn" onclick="appendToDisplay('.')">.</button>
+            </div>
+        </div>
+        
+        <!-- ⑥ メモ帳 -->
+        <div class="memo-section">
+            <h2>メモ帳</h2>
+            <textarea class="memo-textarea" id="memoText" placeholder="ここにメモを入力してください..."></textarea>
+            <div class="memo-controls">
+                <button class="memo-btn download" id="downloadMemo">ダウンロード</button>
+                <button class="memo-btn clear" id="clearMemo">クリア</button>
+            </div>
+        </div>
+        
+        <!-- ⑦ パスワード生成 -->
+        <div class="password-section">
+            <h2>パスワード生成</h2>
+            <input type="text" class="password-display" id="passwordDisplay" readonly>
+            <div class="password-controls">
+                <div class="password-options">
+                    <div class="password-option">
+                        <input type="number" id="passwordLength" class="password-length" value="16" min="8" max="64">
+                        <label for="passwordLength">文字数</label>
+                    </div>
+                    <div class="password-option">
+                        <input type="checkbox" id="uppercase" checked>
+                        <label for="uppercase">大文字 (A-Z)</label>
+                    </div>
+                    <div class="password-option">
+                        <input type="checkbox" id="lowercase" checked>
+                        <label for="lowercase">小文字 (a-z)</label>
+                    </div>
+                    <div class="password-option">
+                        <input type="checkbox" id="numbers" checked>
+                        <label for="numbers">数字 (0-9)</label>
+                    </div>
+                    <div class="password-option">
+                        <input type="checkbox" id="symbols" checked>
+                        <label for="symbols">記号 (!@#$%^&*)</label>
+                    </div>
+                </div>
+                <button class="generate-btn" id="generatePassword">強力なパスワードを生成</button>
+            </div>
+        </div>
+        
+        <!-- ⑧ 動画プレイヤー -->
+        <div class="video-section">
+            <h2>動画プレイヤー</h2>
+            <div class="video-upload">
+                <input type="file" id="videoUpload" class="file-input" accept="video/*" multiple>
+                <p>動画ファイルを選択（複数選択可）</p>
+            </div>
+            
+            <div class="video-playlist" id="videoPlaylist">
+                <!-- 動画プレイリストアイテムがここに追加されます -->
+            </div>
+            
+            <video class="video-player" id="videoPlayer" controls style="display: none;">
+                お使いのブラウザは動画タグをサポートしていません。
+            </video>
+        </div>
+        
+        <!-- ⑨ 動画サイトリンク -->
+        <div class="video-links-section">
+            <h2>動画サイトで視聴</h2>
+            <p>YouTube、ニコニコ動画のリンクを貼って視聴できます</p>
+            
+            <div class="video-links-grid">
+                <div class="video-link-card" onclick="showVideoInput('youtube')">
+                    <img src="https://img.freepik.com/premium-vector/mobile_874723-99.jpg" alt="YouTube" class="video-link-icon">
+                    <h3>YouTube</h3>
+                    <p>YouTubeの動画を視聴</p>
+                </div>
+                
+                <div class="video-link-card" onclick="showVideoInput('niconico')">
+                    <img src="https://yt3.ggpht.com/-hrkpzPztYao/AAAAAAAAAAI/AAAAAAAAAAA/RMLAcix9VM0/s900-c-k-no-mo-rj-c0xffffff/photo.jpg" alt="ニコニコ動画" class="video-link-icon">
+                    <h3>ニコニコ動画</h3>
+                    <p>ニコニコ動画を視聴</p>
+                </div>
+            </div>
+            
+            <div id="videoInputSection" style="display: none; margin-top: 20px;">
+                <h3 id="videoPlatformName"></h3>
+                <input type="text" class="video-link-input" id="videoLinkInput" placeholder="動画のURLを貼り付けてください">
+                <button class="video-link-btn" id="loadVideoBtn">動画を読み込み</button>
+                <button class="video-link-btn" id="clearVideoBtn" style="background-color: #e74c3c;">クリア</button>
+            </div>
+            
+            <iframe class="video-embed" id="videoEmbed"></iframe>
+        </div>
+        
+        <!-- ⑩ 寄付 -->
+        <div class="donate-section">
+            <h2>寄付</h2>
+            <p class="donate-text">寄付してくれる方は感謝</p>
+            <a href="https://qr.paypay.ne.jp/p2p01_t6gZVaydYrHX016I" class="btn donate-btn" target="_blank">寄付はこちら</a>
+        </div>
+        
+        <!-- ⑪ お問い合わせ -->
+        <div class="contact-section">
+            <h2>お問い合わせ</h2>
+            <a href="https://forms.gle/zJjmunH62ZNJVsAt6" class="btn contact-btn" target="_blank">お問い合わせはこちら</a>
+        </div>
+        
+        <!-- フッター -->
+        <div class="footer">
+            Copyright © 2025 picat058
+        </div>
+    </div>
+
+    <script>
+        // ローディング画面処理
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                document.body.style.opacity = '1';
+                
+                // 初期パスワードを生成
+                generatePassword();
+                // 訪問者カウンターを更新
+                updateVisitorCounter();
+            }, 2000); // 2秒後にローディング終了
+        });
+        
+        // 訪問者カウンター機能
+        function updateVisitorCounter() {
+            let visitors = localStorage.getItem('picatVisitors');
+            if (!visitors) {
+                visitors = 1;
+            } else {
+                visitors = parseInt(visitors) + 1;
+            }
+            localStorage.setItem('picatVisitors', visitors);
+            document.getElementById('visitorCounter').textContent = `訪問者数: ${visitors}人`;
+        }
+        
+        // 日時表示機能（曜日追加）
+        function updateDateTime() {
+            const now = new Date();
+            const options = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                weekday: 'long',
+                hour: 'numeric',
+                minute: 'numeric',
+                second: 'numeric',
+                hour12: false
+            };
+            const dateTimeString = now.toLocaleDateString('ja-JP', options);
+            document.getElementById('currentDateTime').textContent = dateTimeString;
+        }
+        
+        // ページ読み込み時に日時を表示
+        updateDateTime();
+        
+        // 1秒ごとに日時を更新
+        setInterval(updateDateTime, 1000);
+        
+        // タイマー機能
+        let timerInterval;
+        let timerSeconds = 0;
+        let isTimerRunning = false;
+        
+        const timerDisplay = document.getElementById('timerDisplay');
+        const startTimerBtn = document.getElementById('startTimer');
+        const pauseTimerBtn = document.getElementById('pauseTimer');
+        const resetTimerBtn = document.getElementById('resetTimer');
+        
+        function formatTime(seconds) {
+            const hrs = Math.floor(seconds / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function updateTimerDisplay() {
+            timerDisplay.textContent = formatTime(timerSeconds);
+        }
+        
+        function startTimer() {
+            if (!isTimerRunning) {
+                isTimerRunning = true;
+                timerInterval = setInterval(() => {
+                    timerSeconds++;
+                    updateTimerDisplay();
+                }, 1000);
+            }
+        }
+        
+        function pauseTimer() {
+            if (isTimerRunning) {
+                isTimerRunning = false;
+                clearInterval(timerInterval);
+            }
+        }
+        
+        function resetTimer() {
+            pauseTimer();
+            timerSeconds = 0;
+            updateTimerDisplay();
+        }
+        
+        startTimerBtn.addEventListener('click', startTimer);
+        pauseTimerBtn.addEventListener('click', pauseTimer);
+        resetTimerBtn.addEventListener('click', resetTimer);
+        
+        // 音楽プレイヤー機能（再生位置追加）
+        const musicUpload = document.getElementById('musicUpload');
+        const playlist = document.getElementById('playlist');
+        const playBtn = document.getElementById('playBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const repeatBtn = document.getElementById('repeatBtn');
+        const clearMusicBtn = document.getElementById('clearMusicBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progress = document.getElementById('progress');
+        const currentTimeDisplay = document.getElementById('currentTime');
+        const durationDisplay = document.getElementById('duration');
+        const repeatInfo = document.getElementById('repeatInfo');
+        
+        const audioPlayer = new Audio();
+        let currentTrackIndex = -1;
+        let tracks = [];
+        let isRepeatMode = false;
+        
+        // ファイルアップロード処理
+        musicUpload.addEventListener('change', function(e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    if (file.type.startsWith('audio/') || file.name.toLowerCase().endsWith('.mid') || file.name.toLowerCase().endsWith('.midi')) {
+                        const url = URL.createObjectURL(file);
+                        tracks.push({
+                            name: file.name,
+                            url: url,
+                            type: file.type
+                        });
+                        
+                        // プレイリストに追加
+                        addPlaylistItem(file.name, tracks.length - 1);
+                    }
+                }
+                
+                // 最初のトラックを選択
+                if (tracks.length > 0 && currentTrackIndex === -1) {
+                    playTrack(0);
+                }
+            }
+        });
+        
+        // プレイリストアイテムを追加
+        function addPlaylistItem(name, index) {
+            const playlistItem = document.createElement('div');
+            playlistItem.className = 'playlist-item';
+            playlistItem.dataset.index = index;
+            
+            playlistItem.innerHTML = `
+                <span>${name}</span>
+                <div class="playlist-controls">
+                    <button class="move-btn" onclick="moveTrackUp(${index})">↑</button>
+                    <button class="move-btn" onclick="moveTrackDown(${index})">↓</button>
+                </div>
+            `;
+            
+            playlistItem.addEventListener('click', function(e) {
+                if (!e.target.classList.contains('move-btn')) {
+                    playTrack(index);
+                }
+            });
+            playlist.appendChild(playlistItem);
+        }
+        
+        // トラックを上に移動
+        function moveTrackUp(index) {
+            if (index > 0) {
+                // 配列内の要素を交換
+                [tracks[index], tracks[index-1]] = [tracks[index-1], tracks[index]];
+                
+                // 現在再生中のトラックのインデックスを更新
+                if (currentTrackIndex === index) {
+                    currentTrackIndex = index - 1;
+                } else if (currentTrackIndex === index - 1) {
+                    currentTrackIndex = index;
+                }
+                
+                // プレイリストを再構築
+                rebuildPlaylist();
+            }
+        }
+        
+        // トラックを下に移動
+        function moveTrackDown(index) {
+            if (index < tracks.length - 1) {
+                // 配列内の要素を交換
+                [tracks[index], tracks[index+1]] = [tracks[index+1], tracks[index]];
+                
+                // 現在再生中のトラックのインデックスを更新
+                if (currentTrackIndex === index) {
+                    currentTrackIndex = index + 1;
+                } else if (currentTrackIndex === index + 1) {
+                    currentTrackIndex = index;
+                }
+                
+                // プレイリストを再構築
+                rebuildPlaylist();
+            }
+        }
+        
+        // プレイリストを再構築
+        function rebuildPlaylist() {
+            playlist.innerHTML = '';
+            tracks.forEach((track, index) => {
+                addPlaylistItem(track.name, index);
+            });
+            
+            // 現在再生中のトラックをアクティブに設定
+            if (currentTrackIndex !== -1) {
+                const currentItem = playlist.children[currentTrackIndex];
+                if (currentItem) {
+                    currentItem.classList.add('active');
+                }
+            }
+        }
+        
+        // トラック再生
+        function playTrack(index) {
+            if (index >= 0 && index < tracks.length) {
+                // 前のトラックのアクティブ状態を解除
+                if (currentTrackIndex !== -1) {
+                    const prevItem = playlist.children[currentTrackIndex];
+                    if (prevItem) prevItem.classList.remove('active');
+                }
+                
+                currentTrackIndex = index;
+                const track = tracks[currentTrackIndex];
+                audioPlayer.src = track.url;
+                
+                // MIDIファイルの場合は特別な処理（実際のMIDI再生にはライブラリが必要）
+                if (track.name.toLowerCase().endsWith('.mid') || track.name.toLowerCase().endsWith('.midi')) {
+                    alert('MIDIファイルはブラウザによって再生できない場合があります。専用のMIDIプレイヤーをご利用ください。');
+                }
+                
+                // 新しいトラックのアクティブ状態を設定
+                const currentItem = playlist.children[currentTrackIndex];
+                if (currentItem) currentItem.classList.add('active');
+                
+                // 再生
+                audioPlayer.play();
+                playBtn.textContent = '再生中';
+                
+                // 曲の長さを表示
+                audioPlayer.addEventListener('loadedmetadata', function() {
+                    durationDisplay.textContent = formatAudioTime(audioPlayer.duration);
+                });
+            }
+        }
+        
+        // 再生ボタン
+        playBtn.addEventListener('click', function() {
+            if (tracks.length > 0) {
+                if (currentTrackIndex === -1) {
+                    playTrack(0);
+                } else {
+                    audioPlayer.play();
+                    playBtn.textContent = '再生中';
+                }
+            }
+        });
+        
+        // 一時停止ボタン
+        pauseBtn.addEventListener('click', function() {
+            audioPlayer.pause();
+            playBtn.textContent = '再生';
+        });
+        
+        // 前の曲ボタン
+        prevBtn.addEventListener('click', function() {
+            if (tracks.length > 0) {
+                let newIndex = currentTrackIndex - 1;
+                if (newIndex < 0) {
+                    newIndex = tracks.length - 1;
+                }
+                playTrack(newIndex);
+            }
+        });
+        
+        // 次の曲ボタン
+        nextBtn.addEventListener('click', function() {
+            if (tracks.length > 0) {
+                let newIndex = currentTrackIndex + 1;
+                if (newIndex >= tracks.length) {
+                    newIndex = 0;
+                }
+                playTrack(newIndex);
+            }
+        });
+        
+        // リピートボタン
+        repeatBtn.addEventListener('click', function() {
+            isRepeatMode = !isRepeatMode;
+            if (isRepeatMode) {
+                repeatBtn.classList.add('active');
+                repeatInfo.textContent = 'リピート: オン';
+            } else {
+                repeatBtn.classList.remove('active');
+                repeatInfo.textContent = 'リピート: オフ';
+            }
+        });
+        
+        // 音楽プレイヤークリア
+        clearMusicBtn.addEventListener('click', function() {
+            if (confirm('プレイリストをクリアしますか？')) {
+                tracks = [];
+                playlist.innerHTML = '';
+                currentTrackIndex = -1;
+                audioPlayer.src = '';
+                playBtn.textContent = '再生';
+                progress.style.width = '0%';
+                currentTimeDisplay.textContent = '0:00';
+                durationDisplay.textContent = '0:00';
+                // リピートモードもリセット
+                isRepeatMode = false;
+                repeatBtn.classList.remove('active');
+                repeatInfo.textContent = 'リピート: オフ';
+            }
+        });
+        
+        // 再生時間の更新
+        audioPlayer.addEventListener('timeupdate', function() {
+            if (audioPlayer.duration) {
+                const percent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                progress.style.width = percent + '%';
+                currentTimeDisplay.textContent = formatAudioTime(audioPlayer.currentTime);
+            }
+        });
+        
+        // 再生位置のシーク機能
+        progressBar.addEventListener('click', function(e) {
+            if (audioPlayer.duration) {
+                const rect = progressBar.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                audioPlayer.currentTime = percent * audioPlayer.duration;
+            }
+        });
+        
+        // 曲が終了したときの処理
+        audioPlayer.addEventListener('ended', function() {
+            if (isRepeatMode) {
+                // リピートモードがオンの場合、同じ曲を再生
+                audioPlayer.currentTime = 0;
+                audioPlayer.play();
+            } else {
+                // リピートモードがオフの場合、次の曲を再生
+                nextBtn.click();
+            }
+        });
+        
+        // 時間表示のフォーマット
+        function formatAudioTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        // 初期状態では一時停止ボタンを無効化
+        pauseBtn.disabled = true;
+        
+        // 再生状態の変更を監視
+        audioPlayer.addEventListener('play', function() {
+            playBtn.textContent = '再生中';
+            pauseBtn.disabled = false;
+        });
+        
+        audioPlayer.addEventListener('pause', function() {
+            playBtn.textContent = '再生';
+            pauseBtn.disabled = false;
+        });
+        
+        // メモ帳機能
+        const memoText = document.getElementById('memoText');
+        const downloadMemoBtn = document.getElementById('downloadMemo');
+        const clearMemoBtn = document.getElementById('clearMemo');
+        
+        // メモをダウンロード
+        downloadMemoBtn.addEventListener('click', function() {
+            const memoContent = memoText.value;
+            if (!memoContent.trim()) {
+                alert('ダウンロードするメモがありません');
+                return;
+            }
+            
+            const blob = new Blob([memoContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `picat_memo_${new Date().toISOString().slice(0, 10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+        
+        // メモをクリア
+        clearMemoBtn.addEventListener('click', function() {
+            if (confirm('メモをクリアしますか？')) {
+                memoText.value = '';
+            }
+        });
+        
+        // 電卓機能
+        const calcDisplay = document.getElementById('calcDisplay');
+        
+        function appendToDisplay(value) {
+            calcDisplay.value += value;
+        }
+        
+        function clearCalculator() {
+            calcDisplay.value = '';
+        }
+        
+        function deleteLast() {
+            calcDisplay.value = calcDisplay.value.slice(0, -1);
+        }
+        
+        function calculate() {
+            try {
+                calcDisplay.value = eval(calcDisplay.value.replace('×', '*'));
+            } catch (error) {
+                calcDisplay.value = 'エラー';
+            }
+        }
+        
+        // パスワード生成機能
+        const passwordDisplay = document.getElementById('passwordDisplay');
+        const generatePasswordBtn = document.getElementById('generatePassword');
+        const passwordLength = document.getElementById('passwordLength');
+        const uppercase = document.getElementById('uppercase');
+        const lowercase = document.getElementById('lowercase');
+        const numbers = document.getElementById('numbers');
+        const symbols = document.getElementById('symbols');
+        
+        function generatePassword() {
+            const length = parseInt(passwordLength.value);
+            const includeUppercase = uppercase.checked;
+            const includeLowercase = lowercase.checked;
+            const includeNumbers = numbers.checked;
+            const includeSymbols = symbols.checked;
+            
+            if (!includeUppercase && !includeLowercase && !includeNumbers && !includeSymbols) {
+                alert('少なくとも1つの文字タイプを選択してください');
+                return;
+            }
+            
+            const uppercaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const lowercaseChars = 'abcdefghijklmnopqrstuvwxyz';
+            const numberChars = '0123456789';
+            const symbolChars = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+            
+            let allowedChars = '';
+            if (includeUppercase) allowedChars += uppercaseChars;
+            if (includeLowercase) allowedChars += lowercaseChars;
+            if (includeNumbers) allowedChars += numberChars;
+            if (includeSymbols) allowedChars += symbolChars;
+            
+            let password = '';
+            for (let i = 0; i < length; i++) {
+                const randomIndex = Math.floor(Math.random() * allowedChars.length);
+                password += allowedChars[randomIndex];
+            }
+            
+            passwordDisplay.value = password;
+        }
+        
+        generatePasswordBtn.addEventListener('click', generatePassword);
+        
+        // 動画プレイヤー機能
+        const videoUpload = document.getElementById('videoUpload');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const videoPlaylist = document.getElementById('videoPlaylist');
+        
+        let videoTracks = [];
+        let currentVideoIndex = -1;
+        
+        videoUpload.addEventListener('change', function(e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    if (file.type.startsWith('video/')) {
+                        const url = URL.createObjectURL(file);
+                        videoTracks.push({
+                            name: file.name,
+                            url: url
+                        });
+                        
+                        // プレイリストに追加
+                        const videoPlaylistItem = document.createElement('div');
+                        videoPlaylistItem.className = 'video-playlist-item';
+                        videoPlaylistItem.textContent = file.name;
+                        videoPlaylistItem.addEventListener('click', function() {
+                            playVideoTrack(videoTracks.length - 1);
+                        });
+                        videoPlaylist.appendChild(videoPlaylistItem);
+                    }
+                }
+                
+                // 最初の動画を選択
+                if (videoTracks.length > 0 && currentVideoIndex === -1) {
+                    playVideoTrack(0);
+                }
+            }
+        });
+        
+        // 動画トラック再生
+        function playVideoTrack(index) {
+            if (index >= 0 && index < videoTracks.length) {
+                // 前の動画のアクティブ状態を解除
+                if (currentVideoIndex !== -1) {
+                    const prevItem = videoPlaylist.children[currentVideoIndex];
+                    prevItem.classList.remove('active');
+                }
+                
+                currentVideoIndex = index;
+                const track = videoTracks[currentVideoIndex];
+                videoPlayer.src = track.url;
+                
+                // 新しい動画のアクティブ状態を設定
+                const currentItem = videoPlaylist.children[currentVideoIndex];
+                currentItem.classList.add('active');
+                
+                // 表示
+                videoPlayer.style.display = 'block';
+                videoPlayer.load();
+            }
+        }
+        
+        // 動画終了時に次の動画を再生
+        videoPlayer.addEventListener('ended', function() {
+            if (videoTracks.length > 0) {
+                let newIndex = currentVideoIndex + 1;
+                if (newIndex >= videoTracks.length) {
+                    newIndex = 0;
+                }
+                playVideoTrack(newIndex);
+            }
+        });
+        
+        // 動画サイトリンク機能
+        let currentVideoPlatform = '';
+        const videoInputSection = document.getElementById('videoInputSection');
+        const videoPlatformName = document.getElementById('videoPlatformName');
+        const videoLinkInput = document.getElementById('videoLinkInput');
+        const loadVideoBtn = document.getElementById('loadVideoBtn');
+        const clearVideoBtn = document.getElementById('clearVideoBtn');
+        const videoEmbed = document.getElementById('videoEmbed');
+        
+        // 動画プラットフォーム選択
+        function showVideoInput(platform) {
+            currentVideoPlatform = platform;
+            videoInputSection.style.display = 'block';
+            videoLinkInput.value = '';
+            videoEmbed.style.display = 'none';
+            
+            switch(platform) {
+                case 'youtube':
+                    videoPlatformName.textContent = 'YouTube動画のURLを入力';
+                    videoLinkInput.placeholder = 'https://www.youtube.com/watch?v=... または https://youtu.be/...';
+                    break;
+                case 'niconico':
+                    videoPlatformName.textContent = 'ニコニコ動画のURLを入力';
+                    videoLinkInput.placeholder = 'https://www.nicovideo.jp/watch/...';
+                    break;
+            }
+        }
+        
+        // 動画を読み込み
+        loadVideoBtn.addEventListener('click', function() {
+            const url = videoLinkInput.value.trim();
+            if (!url) {
+                alert('動画のURLを入力してください');
+                return;
+            }
+            
+            let embedUrl = '';
+            
+            switch(currentVideoPlatform) {
+                case 'youtube':
+                    // YouTubeのURLを埋め込み用に変換
+                    if (url.includes('youtube.com/watch?v=')) {
+                        const videoId = url.split('v=')[1].split('&')[0];
+                        embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                    } else if (url.includes('youtu.be/')) {
+                        const videoId = url.split('youtu.be/')[1].split('?')[0];
+                        embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                    } else {
+                        alert('有効なYouTubeのURLを入力してください');
+                        return;
+                    }
+                    break;
+                    
+                case 'niconico':
+                    // ニコニコ動画のURLを埋め込み用に変換
+                    if (url.includes('nicovideo.jp/watch/')) {
+                        const videoId = url.split('watch/')[1];
+                        embedUrl = `https://embed.nicovideo.jp/watch/${videoId}`;
+                    } else {
+                        alert('有効なニコニコ動画のURLを入力してください');
+                        return;
+                    }
+                    break;
+            }
+            
+            if (embedUrl) {
+                videoEmbed.src = embedUrl;
+                videoEmbed.style.display = 'block';
+            }
+        });
+        
+        // 動画リンクをクリア
+        clearVideoBtn.addEventListener('click', function() {
+            videoLinkInput.value = '';
+            videoEmbed.src = '';
+            videoEmbed.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
